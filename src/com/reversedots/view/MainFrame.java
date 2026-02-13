@@ -88,14 +88,14 @@ public class MainFrame extends JFrame {
         JComboBox<Integer> sizeCombo = new JComboBox<>(validSizes);
         sizeCombo.setSelectedItem(8);
 
-        panel.add(new JLabel("(Negras)"));
+        panel.add(new JLabel("Jugador 1 (Negras) - Selecciona o crea:"));
         panel.add(p1Combo);
-        panel.add(new JLabel("Nombre:"));
+        panel.add(new JLabel("Si es nuevo, escribe el nombre:"));
         panel.add(p1NewField);
 
-        panel.add(new JLabel("(Blancas)"));
+        panel.add(new JLabel("Jugador 2 (Blancas) - Selecciona o crea:"));
         panel.add(p2Combo);
-        panel.add(new JLabel("Nombre:"));
+        panel.add(new JLabel("Si es nuevo, escribe el nombre:"));
         panel.add(p2NewField);
 
         panel.add(new JLabel("Tamaño del tablero (N x N):"));
@@ -114,8 +114,8 @@ public class MainFrame extends JFrame {
         String selected1 = (String) p1Combo.getSelectedItem();
         String selected2 = (String) p2Combo.getSelectedItem();
 
-        String name1 = "Seleccione".equals(selected1) ? p1NewField.getText().trim() : selected1;
-        String name2 = "Seleccione".equals(selected2) ? p2NewField.getText().trim() : selected2;
+        String name1 = "(Nuevo jugador...)".equals(selected1) ? p1NewField.getText().trim() : selected1;
+        String name2 = "(Nuevo jugador...)".equals(selected2) ? p2NewField.getText().trim() : selected2;
 
         if (name1.isEmpty() || name2.isEmpty()) {
             JOptionPane.showMessageDialog(this, "Los nombres son obligatorios.", "Error", JOptionPane.ERROR_MESSAGE);
