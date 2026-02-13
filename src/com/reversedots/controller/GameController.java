@@ -22,27 +22,32 @@ public class GameController {
         this.gameRepo = gameRepo;
     }
 
-    /**
-     * Intenta realizar un movimiento y actualiza el estado del juego.
-     */
+    // Cambiado de startNewGame a initNewGame para coincidir con MainFrame
+    public void initNewGame(int size, Player black, Player white) {
+        this.board = new Board(size);
+        this.currentTurn = PieceColor.BLACK; // Regla 4: Negro inicia
+        this.playerBlack = black;
+        this.playerWhite = white;
+
+        playerRepo.save(black);
+        playerRepo.save(white);
+    }
+
     public GameResult makeMove(int row, int col) {
-        //validar si el movimiento es legal
         if (!board.isValidMove(row, col, currentTurn)) {
             return GameResult.INVALID_MOVE;
         }
-        //ejecutar el movimiento
-        board.executeMove(row, col, currentTurn);
 
-        //cambiar el turno
+        board.executeMove(row, col, currentTurn);
         switchTurn();
-        //verificar si el juego terminó o si el siguiente jugador puede mover
-        if (isGameOver()) {
-            return GameResult.GAME_OVER;
-        }
-        if (!hasValidMoves(currentTurn)) {
-            switchTurn(); //el oponente pierde el turno (Regla 9)
+
+        if (isGameOver()) return GameResult.GAME_OVER;
+
+        if (!board.hasValidMoves(currentTurn)) {
+            switchTurn(); // Regla 9: Salto de turno
             return GameResult.TURN_SKIPPED;
         }
+
         return GameResult.SUCCESS;
     }
 
@@ -51,27 +56,26 @@ public class GameController {
     }
 
     private boolean isGameOver() {
-        //el juego termina si el tablero está lleno o si NADIE puede mover (Regla 10)
         return board.isFull() || (!board.hasValidMoves(PieceColor.BLACK) && !board.hasValidMoves(PieceColor.WHITE));
     }
 
-    private boolean hasValidMoves(PieceColor color) {
-        //el controlador le pregunta al tablero si ese color tiene jugadas posibles
-        return board.hasValidMoves(color);
+    public Board getBoard() { return board; }
+    public PieceColor getCurrentTurn() { return currentTurn; }
+
+    public String getWinnerMessage() {
+        int black = board.getCount(PieceColor.BLACK);
+        int white = board.getCount(PieceColor.WHITE);
+        if (black > white) return "Ganador: " + playerBlack.getName();
+        if (white > black) return "Ganador: " + playerWhite.getName();
+        return "Empate técnico";
     }
 
-    public void startNewGame(int size, Player black, Player white) {
-        this.board = new Board(size);
-        this.currentTurn = PieceColor.BLACK; //negro siempre inicia(Regla 4)
-        this.playerBlack = black;
-        this.playerWhite = white;
-
-        // Registrar jugadores si no existen
-        playerRepo.save(black);
-        playerRepo.save(white);
+    public String getScoreBoard() {
+        return String.format("%s: %d | %s: %d",
+                playerBlack.getName(), board.getCount(PieceColor.BLACK),
+                playerWhite.getName(), board.getCount(PieceColor.WHITE));
     }
 
-    //Método exigido: Guardar partida
     public void saveCurrentGame(String path) throws Exception {
         GameData data = new GameData();
         data.board = this.board;
@@ -79,21 +83,5 @@ public class GameController {
         data.playerBlack = this.playerBlack;
         data.playerWhite = this.playerWhite;
         gameRepo.save(data, path);
-    }
-
-    //Método para obtener el ganador al finalizar
-    public String getWinnerMessage() {
-        int black = board.getCount(PieceColor.BLACK);
-        int white = board.getCount(PieceColor.WHITE);
-
-        if (black > white) return "Ganador: " + playerBlack.getName();
-        if (white > black) return "Ganador: " + playerWhite.getName();
-        return "Empate";
-    }
-
-    public String getScoreBoard() {
-        return String.format("Marcador - %s (Negras): %d | %s (Blancas): %d",
-                playerBlack.getName(), board.getCount(PieceColor.BLACK),
-                playerWhite.getName(), board.getCount(PieceColor.WHITE));
     }
 }
