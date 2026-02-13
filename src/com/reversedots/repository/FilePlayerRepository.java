@@ -1,11 +1,32 @@
 package com.reversedots.repository;
 
 import com.reversedots.model.Player;
+
 import java.io.*;
+import java.nio.file.*;
 import java.util.*;
 
 public class FilePlayerRepository implements PlayerRepository {
-    private final String FILE_PATH = "players.txt";
+
+    private static final String SAVES_DIR = "saves";
+    private static final String FILE_NAME = "players.txt";
+    private final Path filePath;
+
+    public FilePlayerRepository() {
+        try {
+            Path dir = Paths.get(SAVES_DIR);
+            Files.createDirectories(dir); // crea carpeta saves si no existe
+
+            this.filePath = dir.resolve(FILE_NAME);
+
+            if (!Files.exists(filePath)) {
+                Files.createFile(filePath);
+            }
+
+        } catch (IOException e) {
+            throw new RuntimeException("No se pudo inicializar players.txt", e);
+        }
+    }
 
     @Override
     public void save(Player player) {
@@ -26,27 +47,29 @@ public class FilePlayerRepository implements PlayerRepository {
 
     private Map<String, Player> loadAllAsMap() {
         Map<String, Player> players = new HashMap<>();
-        File file = new File(FILE_PATH);
-        if (!file.exists()) return players;
 
-        try (BufferedReader br = new BufferedReader(new FileReader(file))) {
+        try (BufferedReader br = Files.newBufferedReader(filePath)) {
             String line;
             while ((line = br.readLine()) != null) {
+                if (line.trim().isEmpty()) continue;
+
                 String[] data = line.split(",");
                 if (data.length >= 3) {
-                    Player p = new Player(data[0]);
-                    // Aquí podrías añadir un método setStats en Player para cargar los datos reales
-                    players.put(p.getName(), p);
+                    String name = data[0].trim();
+                    int won = Integer.parseInt(data[1].trim());
+                    int lost = Integer.parseInt(data[2].trim());
+
+                    Player p = new Player(name, won, lost);
+                    players.put(name, p);
                 }
             }
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
+        } catch (Exception ignored) {}
+
         return players;
     }
 
     private void saveAll(Collection<Player> players) {
-        try (PrintWriter pw = new PrintWriter(new FileWriter(FILE_PATH))) {
+        try (PrintWriter pw = new PrintWriter(Files.newBufferedWriter(filePath))) {
             for (Player p : players) {
                 pw.println(p.getName() + "," + p.getGamesWon() + "," + p.getGamesLost());
             }

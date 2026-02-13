@@ -6,20 +6,20 @@ public class Player implements java.io.Serializable {
     private int gamesLost;
 
     public Player(String name) {
-        this.name = name;
-        this.gamesWon = 0;
-        this.gamesLost = 0;
+        this(name, 0, 0);
     }
 
-    //Getters and Setters
-    public String getName() { return name;
+    // Nuevo constructor para carga desde archivo
+    public Player(String name, int gamesWon, int gamesLost) {
+        this.name = name;
+        this.gamesWon = gamesWon;
+        this.gamesLost = gamesLost;
     }
-    public int getGamesWon() { return gamesWon;
-    }
-    public void incrementWins() { this.gamesWon++;
-    }
-    public int getGamesLost() { return gamesLost;
-    }
-    public void incrementLosses() { this.gamesLost++;
-    }
+
+    public String getName() { return name; }
+    public int getGamesWon() { return gamesWon; }
+    public int getGamesLost() { return gamesLost; }
+
+    public void incrementWins() { this.gamesWon++; }
+    public void incrementLosses() { this.gamesLost++; }
 }

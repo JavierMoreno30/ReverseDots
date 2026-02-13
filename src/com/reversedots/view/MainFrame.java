@@ -10,10 +10,83 @@ public class MainFrame extends JFrame {
         setSize(400, 500);
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         setLocationRelativeTo(null); //centrar ventana
-        setLayout(new GridLayout(4, 1, 10, 10)); // 4 filas para botones
+        setLayout(new GridLayout(5, 1, 10, 10));
 
         initComponents();
     }
+    private void loadGame() {
+        java.io.File dir = new java.io.File("saves");
+
+        if (!dir.exists() || !dir.isDirectory()) {
+            JOptionPane.showMessageDialog(
+                    this,
+                    "No existe la carpeta 'saves/' o no hay partidas guardadas todavía.",
+                    "Sin partidas",
+                    JOptionPane.INFORMATION_MESSAGE
+            );
+            return;
+        }
+
+        java.io.File[] files = dir.listFiles((d, name) -> name.toLowerCase().endsWith(".dat"));
+
+        if (files == null || files.length == 0) {
+            JOptionPane.showMessageDialog(
+                    this,
+                    "No hay partidas guardadas en 'saves/'.",
+                    "Sin partidas",
+                    JOptionPane.INFORMATION_MESSAGE
+            );
+            return;
+        }
+
+        // Ordenar por fecha (más recientes primero)
+        java.util.Arrays.sort(files, (a, b) -> Long.compare(b.lastModified(), a.lastModified()));
+
+        // Crear lista de nombres para el combo
+        String[] options = new String[files.length];
+        for (int i = 0; i < files.length; i++) {
+            options[i] = files[i].getName();
+        }
+
+        // Mostrar selector
+        String selected = (String) JOptionPane.showInputDialog(
+                this,
+                "Selecciona una partida guardada:",
+                "Cargar partida",
+                JOptionPane.PLAIN_MESSAGE,
+                null,
+                options,
+                options[0]
+        );
+
+        if (selected == null) return; // cancelado
+
+        try {
+            com.reversedots.repository.PlayerRepository playerRepo = new com.reversedots.repository.FilePlayerRepository();
+            com.reversedots.repository.GameRepository gameRepo = new com.reversedots.repository.FileGameRepository();
+
+            com.reversedots.controller.GameController controller =
+                    new com.reversedots.controller.GameController(playerRepo, gameRepo);
+
+            // OJO: aquí se pasa solo el nombre, porque FileGameRepository ya resuelve "saves/"
+            controller.loadGame(selected);
+
+            int size = controller.getBoard().getSize();
+
+            com.reversedots.view.GameFrame gameWindow = new com.reversedots.view.GameFrame(controller, size);
+            gameWindow.setVisible(true);
+            this.dispose();
+
+        } catch (Exception ex) {
+            JOptionPane.showMessageDialog(
+                    this,
+                    "No se pudo cargar la partida: " + ex.getMessage(),
+                    "Error",
+                    JOptionPane.ERROR_MESSAGE
+            );
+        }
+    }
+
 
     private void initComponents() {
         JLabel titleLabel = new JLabel("REVERSE DOTS", SwingConstants.CENTER);
@@ -31,6 +104,13 @@ public class MainFrame extends JFrame {
 
         //eventos básicos
         btnNewGame.addActionListener(e -> startSetup());
+        btnLoadGame.addActionListener(e -> loadGame());
+        JButton btnExit = new JButton("Salir");
+        add(btnExit);
+
+        btnExit.addActionListener(e -> System.exit(0));
+
+
     }
 
     private void startSetup() {
@@ -41,7 +121,8 @@ public class MainFrame extends JFrame {
         JTextField p2Field = new JTextField("Jugador 2");
 
         // Regla 1: El tamaño N debe ser par entre 4 y 20
-        Integer[] validSizes = {4, 6, 8, 10, 12, 14, 16, 18, 20};
+        Integer[] validSizes = new Integer[]{4, 6, 8, 10, 12, 14, 16, 18, 20};
+
         JComboBox<Integer> sizeCombo = new JComboBox<>(validSizes);
         sizeCombo.setSelectedItem(8); // Estándar por defecto
 

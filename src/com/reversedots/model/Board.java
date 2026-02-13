@@ -3,6 +3,7 @@ package com.reversedots.model;
 public class Board implements java.io.Serializable {
     private PieceColor[][] cells;
     private int size;
+    public int getSize() { return size; }
 
     public Board(int size) {
         if (size < 4 || size % 2 != 0) {

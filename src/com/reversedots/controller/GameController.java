@@ -16,6 +16,22 @@ public class GameController {
 
     private final PlayerRepository playerRepo;
     private final GameRepository gameRepo;
+    public int getBoardSize() { return board.getSize(); }
+
+    public boolean isValidMove(int row, int col) {
+        return board.isValidMove(row, col, currentTurn);
+    }
+    public void loadGame(String path) throws Exception {
+        GameData data = gameRepo.load(path);
+        this.board = data.board;
+        this.currentTurn = data.currentTurn;
+        this.playerBlack = data.playerBlack;
+        this.playerWhite = data.playerWhite;
+
+        // Asegura que los jugadores existan en repo (por si se cargó una partida vieja)
+        playerRepo.save(playerBlack);
+        playerRepo.save(playerWhite);
+    }
 
     public GameController(PlayerRepository playerRepo, GameRepository gameRepo) {
         this.playerRepo = playerRepo;
