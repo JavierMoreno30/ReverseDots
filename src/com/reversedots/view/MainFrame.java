@@ -1,7 +1,19 @@
 package com.reversedots.view;
 
+import com.reversedots.controller.GameController;
+import com.reversedots.model.Player;
+import com.reversedots.repository.FileGameRepository;
+import com.reversedots.repository.FilePlayerRepository;
+import com.reversedots.repository.GameRepository;
+import com.reversedots.repository.PlayerRepository;
+
 import javax.swing.*;
+import javax.swing.table.DefaultTableModel;
 import java.awt.*;
+import java.io.File;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
 
 public class MainFrame extends JFrame {
 
@@ -9,13 +21,141 @@ public class MainFrame extends JFrame {
         setTitle("Reverse Dots - Menú Principal");
         setSize(400, 500);
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-        setLocationRelativeTo(null); //centrar ventana
+        setLocationRelativeTo(null);
         setLayout(new GridLayout(5, 1, 10, 10));
 
         initComponents();
     }
+
+    private void initComponents() {
+        JLabel titleLabel = new JLabel("REVERSE DOTS", SwingConstants.CENTER);
+        titleLabel.setFont(new Font("Arial", Font.BOLD, 24));
+
+        JButton btnNewGame = new JButton("Nueva Partida");
+        JButton btnLoadGame = new JButton("Cargar Partida");
+        JButton btnPlayers = new JButton("Ver Jugadores / Estadísticas");
+        JButton btnExit = new JButton("Salir");
+
+        add(titleLabel);
+        add(btnNewGame);
+        add(btnLoadGame);
+        add(btnPlayers);
+        add(btnExit);
+
+        btnNewGame.addActionListener(e -> startSetup());
+        btnLoadGame.addActionListener(e -> loadGame());
+        btnPlayers.addActionListener(e -> showPlayersStats());
+        btnExit.addActionListener(e -> System.exit(0));
+    }
+
+    private void startSetup() {
+        PlayerRepository playerRepo = new FilePlayerRepository(); // lee saves/players.txt
+
+        // Cargar nombres existentes
+        List<Player> existingPlayers = playerRepo.findAll();
+        List<String> names = new ArrayList<>();
+        names.add("(Nuevo jugador...)");
+        for (Player p : existingPlayers) {
+            names.add(p.getName());
+        }
+
+        JPanel panel = new JPanel(new GridLayout(0, 1, 5, 5));
+
+        // Jugador 1 (Negras)
+        JComboBox<String> p1Combo = new JComboBox<>(names.toArray(new String[0]));
+        JTextField p1NewField = new JTextField();
+        p1NewField.setEnabled(true);
+
+        // Jugador 2 (Blancas)
+        JComboBox<String> p2Combo = new JComboBox<>(names.toArray(new String[0]));
+        JTextField p2NewField = new JTextField();
+        p2NewField.setEnabled(true);
+
+        // Activar/Desactivar campos según selección
+        p1Combo.addActionListener(e -> {
+            boolean isNew = "(Nuevo jugador...)".equals(p1Combo.getSelectedItem());
+            p1NewField.setEnabled(isNew);
+            if (!isNew) p1NewField.setText("");
+        });
+
+        p2Combo.addActionListener(e -> {
+            boolean isNew = "(Nuevo jugador...)".equals(p2Combo.getSelectedItem());
+            p2NewField.setEnabled(isNew);
+            if (!isNew) p2NewField.setText("");
+        });
+
+        Integer[] validSizes = new Integer[]{4, 6, 8, 10, 12, 14, 16, 18, 20};
+        JComboBox<Integer> sizeCombo = new JComboBox<>(validSizes);
+        sizeCombo.setSelectedItem(8);
+
+        panel.add(new JLabel("(Negras)"));
+        panel.add(p1Combo);
+        panel.add(new JLabel("Nombre:"));
+        panel.add(p1NewField);
+
+        panel.add(new JLabel("(Blancas)"));
+        panel.add(p2Combo);
+        panel.add(new JLabel("Nombre:"));
+        panel.add(p2NewField);
+
+        panel.add(new JLabel("Tamaño del tablero (N x N):"));
+        panel.add(sizeCombo);
+
+        int result = JOptionPane.showConfirmDialog(
+                this,
+                panel,
+                "Configuración de Partida",
+                JOptionPane.OK_CANCEL_OPTION,
+                JOptionPane.PLAIN_MESSAGE
+        );
+
+        if (result != JOptionPane.OK_OPTION) return;
+
+        String selected1 = (String) p1Combo.getSelectedItem();
+        String selected2 = (String) p2Combo.getSelectedItem();
+
+        String name1 = "Seleccione".equals(selected1) ? p1NewField.getText().trim() : selected1;
+        String name2 = "Seleccione".equals(selected2) ? p2NewField.getText().trim() : selected2;
+
+        if (name1.isEmpty() || name2.isEmpty()) {
+            JOptionPane.showMessageDialog(this, "Los nombres son obligatorios.", "Error", JOptionPane.ERROR_MESSAGE);
+            startSetup();
+            return;
+        }
+
+        if (name1.equalsIgnoreCase(name2)) {
+            JOptionPane.showMessageDialog(this, "Los jugadores deben ser distintos.", "Error", JOptionPane.ERROR_MESSAGE);
+            startSetup();
+            return;
+        }
+
+        int boardSize = (int) sizeCombo.getSelectedItem();
+
+        GameRepository gameRepo = new FileGameRepository();
+
+        // Reutilizar o crear jugadores (sin duplicados)
+        Player p1 = playerRepo.findByName(name1);
+        if (p1 == null) {
+            p1 = new Player(name1);
+            playerRepo.save(p1);
+        }
+
+        Player p2 = playerRepo.findByName(name2);
+        if (p2 == null) {
+            p2 = new Player(name2);
+            playerRepo.save(p2);
+        }
+
+        GameController controller = new GameController(playerRepo, gameRepo);
+        controller.initNewGame(boardSize, p1, p2);
+
+        GameFrame gameWindow = new GameFrame(controller, boardSize);
+        gameWindow.setVisible(true);
+        this.dispose();
+    }
+
     private void loadGame() {
-        java.io.File dir = new java.io.File("saves");
+        File dir = new File("saves");
 
         if (!dir.exists() || !dir.isDirectory()) {
             JOptionPane.showMessageDialog(
@@ -27,7 +167,7 @@ public class MainFrame extends JFrame {
             return;
         }
 
-        java.io.File[] files = dir.listFiles((d, name) -> name.toLowerCase().endsWith(".dat"));
+        File[] files = dir.listFiles((d, name) -> name.toLowerCase().endsWith(".dat"));
 
         if (files == null || files.length == 0) {
             JOptionPane.showMessageDialog(
@@ -39,16 +179,13 @@ public class MainFrame extends JFrame {
             return;
         }
 
-        // Ordenar por fecha (más recientes primero)
-        java.util.Arrays.sort(files, (a, b) -> Long.compare(b.lastModified(), a.lastModified()));
+        Arrays.sort(files, (a, b) -> Long.compare(b.lastModified(), a.lastModified()));
 
-        // Crear lista de nombres para el combo
         String[] options = new String[files.length];
         for (int i = 0; i < files.length; i++) {
             options[i] = files[i].getName();
         }
 
-        // Mostrar selector
         String selected = (String) JOptionPane.showInputDialog(
                 this,
                 "Selecciona una partida guardada:",
@@ -59,21 +196,18 @@ public class MainFrame extends JFrame {
                 options[0]
         );
 
-        if (selected == null) return; // cancelado
+        if (selected == null) return;
 
         try {
-            com.reversedots.repository.PlayerRepository playerRepo = new com.reversedots.repository.FilePlayerRepository();
-            com.reversedots.repository.GameRepository gameRepo = new com.reversedots.repository.FileGameRepository();
+            PlayerRepository playerRepo = new FilePlayerRepository();
+            GameRepository gameRepo = new FileGameRepository();
 
-            com.reversedots.controller.GameController controller =
-                    new com.reversedots.controller.GameController(playerRepo, gameRepo);
-
-            // OJO: aquí se pasa solo el nombre, porque FileGameRepository ya resuelve "saves/"
-            controller.loadGame(selected);
+            GameController controller = new GameController(playerRepo, gameRepo);
+            controller.loadGame(selected.trim());
 
             int size = controller.getBoard().getSize();
 
-            com.reversedots.view.GameFrame gameWindow = new com.reversedots.view.GameFrame(controller, size);
+            GameFrame gameWindow = new GameFrame(controller, size);
             gameWindow.setVisible(true);
             this.dispose();
 
@@ -87,97 +221,66 @@ public class MainFrame extends JFrame {
         }
     }
 
+    private void showPlayersStats() {
+        PlayerRepository playerRepo = new FilePlayerRepository();
+        List<Player> players = playerRepo.findAll();
 
-    private void initComponents() {
-        JLabel titleLabel = new JLabel("REVERSE DOTS", SwingConstants.CENTER);
-        titleLabel.setFont(new Font("Arial", Font.BOLD, 24));
-
-        JButton btnNewGame = new JButton("Nueva Partida");
-        JButton btnLoadGame = new JButton("Cargar Partida");
-        JButton btnPlayers = new JButton("Ver Jugadores / Estadísticas");
-
-        //agregar componentes
-        add(titleLabel);
-        add(btnNewGame);
-        add(btnLoadGame);
-        add(btnPlayers);
-
-        //eventos básicos
-        btnNewGame.addActionListener(e -> startSetup());
-        btnLoadGame.addActionListener(e -> loadGame());
-        JButton btnExit = new JButton("Salir");
-        add(btnExit);
-
-        btnExit.addActionListener(e -> System.exit(0));
-
-
-    }
-
-    private void startSetup() {
-        // Panel contenedor con Grid para organizar etiquetas y campos
-        JPanel panel = new JPanel(new GridLayout(0, 1, 5, 5));
-
-        JTextField p1Field = new JTextField("Jugador 1");
-        JTextField p2Field = new JTextField("Jugador 2");
-
-        // Regla 1: El tamaño N debe ser par entre 4 y 20
-        Integer[] validSizes = new Integer[]{4, 6, 8, 10, 12, 14, 16, 18, 20};
-
-        JComboBox<Integer> sizeCombo = new JComboBox<>(validSizes);
-        sizeCombo.setSelectedItem(8); // Estándar por defecto
-
-        panel.add(new JLabel("Nombre Jugador 1 (Fichas Negras):"));
-        panel.add(p1Field);
-        panel.add(new JLabel("Nombre Jugador 2 (Fichas Blancas):"));
-        panel.add(p2Field);
-        panel.add(new JLabel("Tamaño del tablero (N x N):"));
-        panel.add(sizeCombo);
-
-        int result = JOptionPane.showConfirmDialog(
-                this,
-                panel,
-                "Configuración de Partida",
-                JOptionPane.OK_CANCEL_OPTION,
-                JOptionPane.PLAIN_MESSAGE
-        );
-
-        if (result == JOptionPane.OK_OPTION) {
-            String name1 = p1Field.getText().trim();
-            String name2 = p2Field.getText().trim();
-            int boardSize = (int) sizeCombo.getSelectedItem();
-
-            if (name1.isEmpty() || name2.isEmpty()) {
-                JOptionPane.showMessageDialog(this, "Por favor, introduce nombres válidos.", "Error", JOptionPane.ERROR_MESSAGE);
-                startSetup(); // Reabrir si hay error
-            } else {
-                // 1. Instanciar los Repositorios (Persona A/B)
-                // Nota: Asegúrate de tener estas clases creadas en el paquete repository
-                com.reversedots.repository.PlayerRepository playerRepo = new com.reversedots.repository.FilePlayerRepository();
-                com.reversedots.repository.GameRepository gameRepo = new com.reversedots.repository.FileGameRepository();
-
-                // 2. Crear el Controlador e inyectar repositorios
-                com.reversedots.controller.GameController controller = new com.reversedots.controller.GameController(playerRepo, gameRepo);
-
-                // 3. Crear los objetos Jugador (Model)
-                com.reversedots.model.Player p1 = new com.reversedots.model.Player(name1);
-                com.reversedots.model.Player p2 = new com.reversedots.model.Player(name2);
-
-                // 4. Iniciar la lógica del juego en el controlador
-                controller.initNewGame(boardSize, p1, p2);
-
-                // 5. Lanzar la ventana del juego pasándole el controlador
-                GameFrame gameWindow = new GameFrame(controller, boardSize);
-                gameWindow.setVisible(true);
-
-                // 6. Opcional: Ocultar el menú principal mientras juegan
-                this.dispose();
-            }
+        if (players == null || players.isEmpty()) {
+            JOptionPane.showMessageDialog(
+                    this,
+                    "No hay jugadores registrados todavía.",
+                    "Jugadores",
+                    JOptionPane.INFORMATION_MESSAGE
+            );
+            return;
         }
+
+        players.sort((a, b) -> {
+            int cmp = Integer.compare(b.getGamesWon(), a.getGamesWon());
+            if (cmp != 0) return cmp;
+            return Integer.compare(a.getGamesLost(), b.getGamesLost());
+        });
+
+        String[] columns = {"Jugador", "Victorias", "Derrotas"};
+        Object[][] data = new Object[players.size()][3];
+
+        for (int i = 0; i < players.size(); i++) {
+            Player p = players.get(i);
+            data[i][0] = p.getName();
+            data[i][1] = p.getGamesWon();
+            data[i][2] = p.getGamesLost();
+        }
+
+        DefaultTableModel model = new DefaultTableModel(data, columns) {
+            @Override
+            public boolean isCellEditable(int row, int column) {
+                return false;
+            }
+        };
+
+        JTable table = new JTable(model);
+        table.setRowHeight(24);
+        table.getTableHeader().setReorderingAllowed(false);
+
+        JScrollPane scrollPane = new JScrollPane(table);
+
+        JDialog dialog = new JDialog(this, "Jugadores / Estadísticas", true);
+        dialog.setSize(450, 300);
+        dialog.setLocationRelativeTo(this);
+        dialog.setLayout(new BorderLayout());
+        dialog.add(scrollPane, BorderLayout.CENTER);
+
+        JButton closeBtn = new JButton("Cerrar");
+        closeBtn.addActionListener(e -> dialog.dispose());
+
+        JPanel south = new JPanel();
+        south.add(closeBtn);
+        dialog.add(south, BorderLayout.SOUTH);
+
+        dialog.setVisible(true);
     }
 
     public static void main(String[] args) {
-        SwingUtilities.invokeLater(() -> {
-            new MainFrame().setVisible(true);
-        });
+        SwingUtilities.invokeLater(() -> new MainFrame().setVisible(true));
     }
 }

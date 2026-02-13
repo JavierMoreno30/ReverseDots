@@ -16,11 +16,34 @@ public class GameController {
 
     private final PlayerRepository playerRepo;
     private final GameRepository gameRepo;
+    private boolean gameFinished = false;
+
     public int getBoardSize() { return board.getSize(); }
 
     public boolean isValidMove(int row, int col) {
         return board.isValidMove(row, col, currentTurn);
     }
+    private void finalizeGameIfNeeded() {
+        if (gameFinished) return;
+
+        int black = board.getCount(PieceColor.BLACK);
+        int white = board.getCount(PieceColor.WHITE);
+
+        if (black > white) {
+            playerBlack.incrementWins();
+            playerWhite.incrementLosses();
+        } else if (white > black) {
+            playerWhite.incrementWins();
+            playerBlack.incrementLosses();
+        } // empate: no suma nada (si tu profe quiere, lo ajustamos)
+
+        // Guardar cambios en archivo
+        playerRepo.save(playerBlack);
+        playerRepo.save(playerWhite);
+
+        gameFinished = true;
+    }
+
     public void loadGame(String path) throws Exception {
         GameData data = gameRepo.load(path);
         this.board = data.board;
@@ -31,6 +54,8 @@ public class GameController {
         // Asegura que los jugadores existan en repo (por si se cargó una partida vieja)
         playerRepo.save(playerBlack);
         playerRepo.save(playerWhite);
+        gameFinished = false;
+
     }
 
     public GameController(PlayerRepository playerRepo, GameRepository gameRepo) {
@@ -47,6 +72,8 @@ public class GameController {
 
         playerRepo.save(black);
         playerRepo.save(white);
+        gameFinished = false;
+
     }
 
     public GameResult makeMove(int row, int col) {
@@ -57,7 +84,10 @@ public class GameController {
         board.executeMove(row, col, currentTurn);
         switchTurn();
 
-        if (isGameOver()) return GameResult.GAME_OVER;
+        if (isGameOver()) {
+            finalizeGameIfNeeded();
+            return GameResult.GAME_OVER;
+        }
 
         if (!board.hasValidMoves(currentTurn)) {
             switchTurn(); // Regla 9: Salto de turno

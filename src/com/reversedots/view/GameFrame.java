@@ -3,6 +3,7 @@ package com.reversedots.view;
 import com.reversedots.controller.GameController;
 import com.reversedots.model.PieceColor;
 import com.reversedots.enums.GameResult;
+import com.reversedots.view.MainFrame;
 
 import javax.swing.*;
 import java.awt.*;
@@ -63,19 +64,23 @@ public class GameFrame extends JFrame {
             }
         });
 
-        // ===== BOTÓN EXIT =====
         JButton btnExit = new JButton("Exit");
         btnExit.addActionListener(e -> {
             int confirm = JOptionPane.showConfirmDialog(
                     this,
-                    "¿Seguro que deseas salir?",
+                    "¿Seguro que deseas salir y volver al menú principal?",
                     "Confirmar salida",
                     JOptionPane.YES_NO_OPTION
             );
+
             if (confirm == JOptionPane.YES_OPTION) {
-                System.exit(0);
+                this.dispose(); // Cierra ventana actual
+
+                // Volver a abrir el menú principal
+                new MainFrame().setVisible(true);
             }
         });
+
 
         // ===== PANEL INFERIOR =====
         JPanel southPanel = new JPanel();
