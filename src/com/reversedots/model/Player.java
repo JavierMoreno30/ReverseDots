@@ -9,7 +9,7 @@ public class Player implements java.io.Serializable {
         this(name, 0, 0);
     }
 
-    // Nuevo constructor para carga desde archivo
+    //contructor para cargar jugadores con estadisticas previas
     public Player(String name, int gamesWon, int gamesLost) {
         this.name = name;
         this.gamesWon = gamesWon;

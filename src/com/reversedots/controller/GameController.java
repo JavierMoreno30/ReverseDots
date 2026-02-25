@@ -8,6 +8,7 @@ import com.reversedots.model.Player;
 import com.reversedots.repository.GameRepository;
 import com.reversedots.repository.PlayerRepository;
 
+//Controller principal que maneja la logica del juego, interacción con el modelo y persistencia.Este es el puente entre la vista (MainFrame) y el modelo (Board, Player).
 public class GameController {
     private Board board;
     private PieceColor currentTurn;
@@ -35,15 +36,15 @@ public class GameController {
         } else if (white > black) {
             playerWhite.incrementWins();
             playerBlack.incrementLosses();
-        } // empate: no suma nada (si tu profe quiere, lo ajustamos)
+        } //en este caso seria un empate tecnico, entonces no se suma nada a las estadisticas de los jugadores
 
-        // Guardar cambios en archivo
+        //se guardan los cambios en el repositorio de jugadores para actualizar las estadísticas
         playerRepo.save(playerBlack);
         playerRepo.save(playerWhite);
 
         gameFinished = true;
     }
-
+    //metodo para cargar una partida desde un archivo, se encarga de restaurar el estado del juego y asegurar que los jugadores existan en el repositorio
     public void loadGame(String path) throws Exception {
         GameData data = gameRepo.load(path);
         this.board = data.board;
@@ -51,22 +52,22 @@ public class GameController {
         this.playerBlack = data.playerBlack;
         this.playerWhite = data.playerWhite;
 
-        // Asegura que los jugadores existan en repo (por si se cargó una partida vieja)
+        //asegura que los jugadores existan en repo (por si se cargó una partida vieja)
         playerRepo.save(playerBlack);
         playerRepo.save(playerWhite);
         gameFinished = false;
 
     }
-
+    //constructor que recibe los repositorios necesarios para la persistencia de jugadores y partidas.
     public GameController(PlayerRepository playerRepo, GameRepository gameRepo) {
         this.playerRepo = playerRepo;
         this.gameRepo = gameRepo;
     }
 
-    // Cambiado de startNewGame a initNewGame para coincidir con MainFrame
+    //inicializa una nueva partida con un tablero del tamaño especificado y asigna los jugadores. establece el turno inicial
     public void initNewGame(int size, Player black, Player white) {
         this.board = new Board(size);
-        this.currentTurn = PieceColor.BLACK; // Regla 4: Negro inicia
+        this.currentTurn = PieceColor.BLACK; //regla 4: Negro inicia
         this.playerBlack = black;
         this.playerWhite = white;
 
@@ -90,7 +91,7 @@ public class GameController {
         }
 
         if (!board.hasValidMoves(currentTurn)) {
-            switchTurn(); // Regla 9: Salto de turno
+            switchTurn(); //regla 9: Salto de turno
             return GameResult.TURN_SKIPPED;
         }
 
@@ -104,7 +105,7 @@ public class GameController {
     private boolean isGameOver() {
         return board.isFull() || (!board.hasValidMoves(PieceColor.BLACK) && !board.hasValidMoves(PieceColor.WHITE));
     }
-
+//getters para que la vista pueda acceder al estado actual del juego
     public Board getBoard() { return board; }
     public PieceColor getCurrentTurn() { return currentTurn; }
 
@@ -121,7 +122,7 @@ public class GameController {
                 playerBlack.getName(), board.getCount(PieceColor.BLACK),
                 playerWhite.getName(), board.getCount(PieceColor.WHITE));
     }
-
+//metodo para guardar el estado actual del juego en un archivo, empaquetando la iformacion en un objeto GameData y dandole persistencia al GameRepository
     public void saveCurrentGame(String path) throws Exception {
         GameData data = new GameData();
         data.board = this.board;

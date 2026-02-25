@@ -2,9 +2,7 @@ package com.reversedots.model;
 
 import java.io.Serializable;
 
-/**
- * Contenedor para agrupar todos los datos necesarios para persistir una partida.
- */
+//contendor de datos para guardar el estado del juego
 public class GameData implements Serializable {
     public Board board;
     public PieceColor currentTurn;

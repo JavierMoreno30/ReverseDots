@@ -13,9 +13,7 @@ public class Board implements java.io.Serializable {
         this.cells = new PieceColor[size][size];
         initializeBoard();
     }
-    /**
-     * Coloca las fichas iniciales en el centro del tablero.
-     */
+ //coloca fichas iniciales en el centro del tablero (segun patron cruzado de la regla 3 del proyecto)
     private void initializeBoard() {
         for (int i = 0; i < size; i++) {
             for (int j = 0; j < size; j++) {
@@ -35,13 +33,7 @@ public class Board implements java.io.Serializable {
         return cells[row][col];
     }
 
-    /**
-     * Verifica si un movimiento es válido según las reglas del juego.
-     * @param row Fila destino
-     * @param col Columna destino
-     * @param color Color del jugador actual
-     * @return true si el movimiento encierra al menos una ficha oponente.
-     */
+    //IsValidMove verifica si colocar una ficha en row,col es legal segun reglas de juego
     public boolean isValidMove(int row, int col, PieceColor color) {
         // Regla 5 & 6: Debe ser una celda vacía
         if (row < 0 || row >= size || col < 0 || col >= size || cells[row][col] != PieceColor.EMPTY) {
@@ -61,9 +53,7 @@ public class Board implements java.io.Serializable {
         return false;
     }
 
-    /**
-     * Revisa si en una dirección específica se pueden capturar fichas.
-     */
+ //canFlip verifica si en la dirección dada (dr,dc) se puede encerrar fichas del oponente entre la ficha que se colocará y otra ficha del mismo color
     private boolean canFlip(int row, int col, int dr, int dc, PieceColor color) {
         int r = row + dr;
         int c = col + dc;
@@ -85,14 +75,12 @@ public class Board implements java.io.Serializable {
         return false;
     }
 
-    /**
-     * Coloca una ficha y voltea las del oponente en todas las direcciones válidas.
-     */
+    //se ejecuta el movimiento colocando la ficha y volteando las fichas del rival en las direcciones posibles
     public void executeMove(int row, int col, PieceColor color) {
-        //1.Colocar la ficha inicial
+        //colocar la ficha inicial
         cells[row][col] = color;
 
-        //2.Voltear en las 8 direcciones
+        //voltear en las 8 direcciones
         for (int dr = -1; dr <= 1; dr++) {
             for (int dc = -1; dc <= 1; dc++) {
                 if (dr == 0 && dc == 0) continue;
@@ -104,9 +92,7 @@ public class Board implements java.io.Serializable {
         }
     }
 
-    /**
-     * Cambia el color de las fichas del oponente en una dirección específica.
-     */
+  //cambia el color de las fichas del rival en la direccion dada, hasta que encuentre una ficha del mismo color o una celda vacía
     private void flipDirection(int row, int col, int dr, int dc, PieceColor color) {
         int r = row + dr;
         int c = col + dc;
@@ -118,9 +104,7 @@ public class Board implements java.io.Serializable {
             c += dc;
         }
     }
-    /**
-     * Verifica si un color específico tiene al menos una jugada válida en todo el tablero.
-     */
+ //verifica si algun color tiene movimiento validos disponibles, si no hay termina.
     public boolean hasValidMoves(PieceColor color) {
         for (int i = 0; i < size; i++) {
             for (int j = 0; j < size; j++) {
@@ -132,9 +116,7 @@ public class Board implements java.io.Serializable {
         return false;
     }
 
-    /**
-     * Verifica si ya no quedan celdas vacías (Regla 10).
-     */
+   //verificacion de si quedan celdas vacias, si no hay, fin.
     public boolean isFull() {
         for (int i = 0; i < size; i++) {
             for (int j = 0; j < size; j++) {
@@ -145,9 +127,7 @@ public class Board implements java.io.Serializable {
         }
         return true;
     }
-    /**
-     * Cuenta la cantidad de fichas de un color específico en el tablero.
-     */
+    //lleva la cuenta de cuantas fiichas de cada color hay, da un ganador al final del juego (el que tenga mas)
     public int getCount(PieceColor color) {
         int count = 0;
         for (int i = 0; i < size; i++) {

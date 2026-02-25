@@ -5,7 +5,7 @@ import com.reversedots.model.Player;
 import java.io.*;
 import java.nio.file.*;
 import java.util.*;
-
+//guarda los datos en un archivo de texto con formato CSV
 public class FilePlayerRepository implements PlayerRepository {
 
     private static final String SAVES_DIR = "saves";
@@ -15,7 +15,7 @@ public class FilePlayerRepository implements PlayerRepository {
     public FilePlayerRepository() {
         try {
             Path dir = Paths.get(SAVES_DIR);
-            Files.createDirectories(dir); // crea carpeta saves si no existe
+            Files.createDirectories(dir); //crea carpeta saves si no existe
 
             this.filePath = dir.resolve(FILE_NAME);
 
