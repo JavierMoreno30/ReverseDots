@@ -4,6 +4,7 @@ import com.reversedots.model.Player;
 import java.util.ArrayList;
 import java.util.List;
 
+//clase para almacenar jugadores en memoria
 public class InMemoryPlayerRepository implements PlayerRepository {
     private List<Player> players = new ArrayList<>();
 
@@ -21,7 +22,7 @@ public class InMemoryPlayerRepository implements PlayerRepository {
                 .findFirst()
                 .orElse(null);
     }
-
+//devuelve una nueva lista con los jugadores actuales
     @Override
     public List<Player> findAll() {
         return new ArrayList<>(players);

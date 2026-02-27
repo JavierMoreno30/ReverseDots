@@ -20,7 +20,7 @@ public class BoardPanel extends JPanel {
         for (int r = 0; r < size; r++) {
             for (int c = 0; c < size; c++) {
                 JButton btn = new JButton();
-                btn.setBackground(new Color(34, 139, 34)); // Verde clásico de tapete
+                btn.setBackground(new Color(34, 139, 34));
                 btn.setBorder(BorderFactory.createLineBorder(Color.BLACK));
                 cells[r][c] = btn;
                 add(btn);
@@ -28,8 +28,7 @@ public class BoardPanel extends JPanel {
         }
     }
 
-    // Método para actualizar visualmente desde el Modelo
+    //Metodo para actualizar tablero
     public void refreshBoard(PieceColor[][] boardData) {
-        // Aquí cambiaremos el icono o color de los botones según PieceColor
     }
 }

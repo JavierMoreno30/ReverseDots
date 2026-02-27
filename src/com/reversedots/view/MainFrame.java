@@ -49,9 +49,9 @@ public class MainFrame extends JFrame {
     }
 
     private void startSetup() {
-        PlayerRepository playerRepo = new FilePlayerRepository(); // lee saves/players.txt
+        PlayerRepository playerRepo = new FilePlayerRepository(); //lee saves/players.txt
 
-        // Cargar nombres existentes
+        //cargar nombres existentes *ya probado con Javier y Akil*
         List<Player> existingPlayers = playerRepo.findAll();
         List<String> names = new ArrayList<>();
         names.add("(Nuevo jugador...)");
@@ -61,17 +61,17 @@ public class MainFrame extends JFrame {
 
         JPanel panel = new JPanel(new GridLayout(0, 1, 5, 5));
 
-        // Jugador 1 (Negras)
+        //Jugador 1 (Negras)
         JComboBox<String> p1Combo = new JComboBox<>(names.toArray(new String[0]));
         JTextField p1NewField = new JTextField();
         p1NewField.setEnabled(true);
 
-        // Jugador 2 (Blancas)
+        //Jugador 2 (Blancas)
         JComboBox<String> p2Combo = new JComboBox<>(names.toArray(new String[0]));
         JTextField p2NewField = new JTextField();
         p2NewField.setEnabled(true);
 
-        // Activar/Desactivar campos según selección
+        //activar/desactivar campos según selección
         p1Combo.addActionListener(e -> {
             boolean isNew = "(Nuevo jugador...)".equals(p1Combo.getSelectedItem());
             p1NewField.setEnabled(isNew);
@@ -133,7 +133,7 @@ public class MainFrame extends JFrame {
 
         GameRepository gameRepo = new FileGameRepository();
 
-        // Reutilizar o crear jugadores (sin duplicados)
+        //reutilizar o crear jugadores (sin que hayan   duplicados)
         Player p1 = playerRepo.findByName(name1);
         if (p1 == null) {
             p1 = new Player(name1);

@@ -25,16 +25,16 @@ public class GameFrame extends JFrame {
         setLocationRelativeTo(null);
         setLayout(new BorderLayout());
 
-        // ===== STATUS SUPERIOR =====
+        //Status Label
         statusLabel = new JLabel("", SwingConstants.CENTER);
         statusLabel.setFont(new Font("Arial", Font.BOLD, 16));
         statusLabel.setBorder(BorderFactory.createEmptyBorder(10, 0, 10, 0));
         add(statusLabel, BorderLayout.NORTH);
 
-        // ===== TABLERO =====
+        //tablero
         initBoard(size);
 
-        // ===== BOTÓN GUARDAR =====
+        //boton de guardar
         JButton btnSave = new JButton("Guardar Partida");
 
         btnSave.addActionListener(e -> {
@@ -74,15 +74,15 @@ public class GameFrame extends JFrame {
             );
 
             if (confirm == JOptionPane.YES_OPTION) {
-                this.dispose(); // Cierra ventana actual
+                this.dispose(); //cierra ventana actual
 
-                // Volver a abrir el menú principal
+                //volver a abrir el menú principal
                 new MainFrame().setVisible(true);
             }
         });
 
 
-        // ===== PANEL INFERIOR =====
+        //panel inferior
         JPanel southPanel = new JPanel();
         southPanel.add(btnSave);
         southPanel.add(btnExit);
@@ -134,7 +134,7 @@ public class GameFrame extends JFrame {
                 return;
 
             case INVALID_MOVE:
-                return; // Ignorar clic inválido
+                return; //esto solo para ignorar un click invalido
         }
 
         updateBoardUI();
